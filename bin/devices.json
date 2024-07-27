@@ -1,0 +1,58 @@
+[
+  {
+    "id": 769,
+    "name": "Algorithm Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 770,
+    "name": "TwinCat Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 771,
+    "name": "Vision Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 772,
+    "name": "Optitrack Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 773,
+    "name": "Sensor Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 774,
+    "name": "Hypersen Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  },
+  {
+    "id": 775,
+    "name": "FinRayCalc Server",
+    "type": 1280,
+    "desc": "",
+    "author": "",
+    "enable": true
+  }
+]

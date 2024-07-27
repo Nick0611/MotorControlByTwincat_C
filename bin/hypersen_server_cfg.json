@@ -1,0 +1,18 @@
+{
+  "bus": {
+    "ip": "127.0.0.1",
+    "port": 4000
+  },
+  "log": {
+    "ip": "127.0.0.1",
+    "port": 4888
+  },
+  "sensor": {
+    "baud_rate": 9600,
+    "com_name": "COM16",
+    "is_broadcast_data": true,
+    "broadcast_freq": 30,
+    "is_serialize_data": false,
+    "is_print_sensor_data": true
+  }
+}

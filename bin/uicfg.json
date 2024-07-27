@@ -1,0 +1,18 @@
+{
+  "app_id": 5100,
+  "opt_server_id": 772,
+  "sensor_server_id": 773,
+  "hypersen_server_id": 774,
+  "finray_calc_server_id": 775,
+  "bus": {
+    "ip": "127.0.0.1",
+    "port": 4000
+  },
+  "log": {
+    "ip": "127.0.0.1",
+    "port": 4888
+  },
+  "ppcm": {
+    "encoder_init_pos": [ 2806, 149 ]
+  }
+}

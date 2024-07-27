@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="CPS">
+      <UniqueIdentifier>{d47a8935-7078-4f95-85aa-d6fab314b699}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{6bc7d9a0-49b5-45f6-8313-ed4fe0e0bbff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Framework">
+      <UniqueIdentifier>{76ced67c-d6d7-40f3-8c9b-e022407b05dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Main\Init">
+      <UniqueIdentifier>{75882295-4f5c-40b1-b8b9-643b02d60190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Defines">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="UI\IMWindows">
+      <UniqueIdentifier>{8e7a4180-38c5-4144-8a40-3422d272d7e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\Sys">
+      <UniqueIdentifier>{57af07ff-38e5-467b-94c4-5f1e64eb9400}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\View">
+      <UniqueIdentifier>{e2908ee9-0175-4c59-ac34-8d4301b92111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\Help">
+      <UniqueIdentifier>{a19c64af-4be5-4338-9729-1ff7a2a29ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\Popup">
+      <UniqueIdentifier>{36790097-cf76-4b9e-a8b4-a72c6bce98a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\Tool">
+      <UniqueIdentifier>{8de4ee9d-a920-41d9-9367-857cd76de02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{acd277a2-bc5e-4003-8340-6e3c1f72e678}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EPOS2">
+      <UniqueIdentifier>{e9612a9c-94b9-47e4-9dab-77368269bec4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithm">
+      <UniqueIdentifier>{83b6e247-0c19-4325-9b78-e6ad17b88294}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\App">
+      <UniqueIdentifier>{9ab7136e-5f46-4092-8710-a0fb5be47e31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\IMWindows\TrolleyControlTestUI">
+      <UniqueIdentifier>{91ac8177-8255-455d-8d7e-f74276f3114c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="CPSHandler.h">
+      <Filter>CPS</Filter>
+    </ClInclude>
+    <ClInclude Include="UIApplication.h">
+      <Filter>UI\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="UISysSettings.h">
+      <Filter>UI\IMWindows\Sys</Filter>
+    </ClInclude>
+    <ClInclude Include="UIHelpAbout.h">
+      <Filter>UI\IMWindows\Help</Filter>
+    </ClInclude>
+    <ClInclude Include="UICfgParser.h">
+      <Filter>Main\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="UICfg.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UICfgSerializeTool.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIWindowManager.h">
+      <Filter>UI\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="Title.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIImageView.h">
+      <Filter>UI\IMWindows\Popup</Filter>
+    </ClInclude>
+    <ClInclude Include="UICharDef.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIHelpDef.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIHelpDefSerializeTool.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\share\UIDef.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\share\Config.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomDef.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIOptiTrack.h">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="UISensorMonitor.h">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\EPOS2.h">
+      <Filter>EPOS2</Filter>
+    </ClInclude>
+    <ClInclude Include="UIEPOS2Control.h">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="RFPPCMController.h">
+      <Filter>EPOS2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\share\Logger.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\share\UIUtils.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\share\StrTool.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UserTool.h">
+      <Filter>Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="UIHypersenMonitor.h">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="UIFinRay.h">
+      <Filter>UI\IMWindows\App</Filter>
+    </ClInclude>
+    <ClInclude Include="UITrolleyControlTest.h">
+      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RFPPCM.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="mth.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="CPSHandler.cpp">
+      <Filter>CPS</Filter>
+    </ClCompile>
+    <ClCompile Include="UIApplication.cpp">
+      <Filter>UI\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="UISysSettings.cpp">
+      <Filter>UI\IMWindows\Sys</Filter>
+    </ClCompile>
+    <ClCompile Include="UIHelpAbout.cpp">
+      <Filter>UI\IMWindows\Help</Filter>
+    </ClCompile>
+    <ClCompile Include="UICfgParser.cpp">
+      <Filter>Main\Init</Filter>
+    </ClCompile>
+    <ClCompile Include="UIWindowManager.cpp">
+      <Filter>UI\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="UIImageView.cpp">
+      <Filter>UI\IMWindows\Popup</Filter>
+    </ClCompile>
+    <ClCompile Include="UIOptiTrack.cpp">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UISensorMonitor.cpp">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\EPos2Test\EPOS2.cpp">
+      <Filter>EPOS2</Filter>
+    </ClCompile>
+    <ClCompile Include="UIEPOS2Control.cpp">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="RFPPCMController.cpp">
+      <Filter>EPOS2</Filter>
+    </ClCompile>
+    <ClCompile Include="UIPlotDef.h">
+      <Filter>Defines</Filter>
+    </ClCompile>
+    <ClCompile Include="UIHypersenMonitor.cpp">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UIFinRay.cpp">
+      <Filter>UI\IMWindows\App</Filter>
+    </ClCompile>
+    <ClCompile Include="UITrolleyControlTest.cpp">
+      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\share\imgui\imgui_widgets.cpp">
+      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\bin\uicfg.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="UpdateVersion.py">
+      <Filter>Tools</Filter>
+    </None>
+    <None Include="GenCharDef.py">
+      <Filter>Tools</Filter>
+    </None>
+  </ItemGroup>
+</Project>
