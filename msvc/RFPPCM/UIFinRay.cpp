@@ -20,6 +20,8 @@ UIFinRay::UIFinRay(UIGLWindow* main_win, const char* title): UIBaseWindow(main_w
 	m_epos2 = std::make_shared<Device::EPOS2>(m_epos_node_id);
 	calibration_parameter = this->readMatrixFile("calibration.txt");
 	m_vec_hist_data.resize(2);
+
+
 }
 
 void UIFinRay::UpdatePlotData(const std::string& key1, const std::vector<double>& x, const std::vector<double>& y, const std::string& key2, const std::vector<double>& rbx, const std::vector<double>& rby)

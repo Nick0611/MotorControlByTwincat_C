@@ -138,6 +138,10 @@ void UIWindowManager::InitWindows()
 	sprintf(buf, u8"%s Trolley Controller", ICON_FA_BACON);
 	m_ui_trolley = new UITrolleyControlTest(m_ui_main, buf);
 	m_win_list.push_back(m_ui_trolley);
+
+	sprintf(buf, u8"%s HUATRAN Force Sensor", ICON_FA_BAN);
+	m_ui_force_huatran = new UIForceSensor_HUATRAN(m_ui_main, buf);
+	m_win_list.push_back(m_ui_force_huatran);
 }
 
 void UIWindowManager::InitMenus()

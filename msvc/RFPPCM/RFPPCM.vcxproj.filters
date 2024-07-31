@@ -55,8 +55,8 @@
     <Filter Include="UI\IMWindows\App">
       <UniqueIdentifier>{9ab7136e-5f46-4092-8710-a0fb5be47e31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UI\IMWindows\TrolleyControlTestUI">
-      <UniqueIdentifier>{91ac8177-8255-455d-8d7e-f74276f3114c}</UniqueIdentifier>
+    <Filter Include="ADS">
+      <UniqueIdentifier>{79981c73-0655-4495-9d25-34c1456965e1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -148,7 +148,13 @@
       <Filter>UI\IMWindows\App</Filter>
     </ClInclude>
     <ClInclude Include="UITrolleyControlTest.h">
-      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="UIForceSensor_HUATRAN.h">
+      <Filter>UI\IMWindows\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="AdsExpand.h">
+      <Filter>ADS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -211,10 +217,13 @@
       <Filter>UI\IMWindows\App</Filter>
     </ClCompile>
     <ClCompile Include="UITrolleyControlTest.cpp">
-      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+      <Filter>UI\IMWindows\Tool</Filter>
     </ClCompile>
     <ClCompile Include="..\..\share\imgui\imgui_widgets.cpp">
-      <Filter>UI\IMWindows\TrolleyControlTestUI</Filter>
+      <Filter>UI\IMWindows\View</Filter>
+    </ClCompile>
+    <ClCompile Include="UIForceSensor_HUATRAN.cpp">
+      <Filter>UI\IMWindows\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,7 @@
 #include "UIHypersenMonitor.h"
 #include "UIFinRay.h"
 #include "UITrolleyControlTest.h"
+#include "UIForceSensor_HUATRAN.h"
 
 class UIMainWindow;
 class UIApplication;
@@ -35,6 +36,7 @@ public:
 	UIEPOS2Control* GetEPOS2Control() { return m_ui_epos2; }
 	UISensorMonitor* GetSensorMonitor() { return m_ui_sensor; }
 	UITrolleyControlTest* GetTrolleyControlTest() { return m_ui_trolley; }
+	UIForceSensor_HUATRAN* GetForceSensor_HUATRAN() { return m_ui_force_huatran; }
 	//UIPPCMPlot* GetPPCMPlot() { return m_ui_plot; }
 public:
 	void ShowOpenModelFileDialog();
@@ -77,6 +79,7 @@ protected:
 	UIHypersenMonitor* m_ui_hypersen = nullptr;
 	UIFinRay* m_ui_finray = nullptr;
 	UITrolleyControlTest* m_ui_trolley = nullptr;
+	UIForceSensor_HUATRAN* m_ui_force_huatran = nullptr;
 
 	// window show
 	bool m_show_demo = false;

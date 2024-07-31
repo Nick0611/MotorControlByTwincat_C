@@ -19,6 +19,7 @@
 #include <windows.h>
 #include "TcAdsDef.h"
 #include "TcAdsAPI.h"
+#include "AdsExpand.h"
 
 // 电机运动模式
 typedef enum 
@@ -34,16 +35,18 @@ typedef enum
 typedef struct
 {
 	bool set_enable; // 使能
-	bool set_stop; // 使能
+	bool set_halt; // 使能
 	bool set_continue; // 使能
+	bool set_stop; // 使能
 	bool set_clear; // 使能
 	short selected_motion_mode; // 运动模式
 	double jog_velocity_slow; // 慢速点动速度
 	double jog_velocity_fast; // 快速点动速度
-	double velocity; // 目标速度
-	bool velocity_exc; // 开始执行目标速度
-	bool position_exc; // 开始执行目标位置
-	double position; // 目标位置
+	double Tarvelocity; // 目标速度
+	bool motion_exc; // 开始执行目标速度
+	double Tarposition; // 目标位置
+	double velocity_min; // 最小速度
+	double velocity_max; // 最大速度
 }Motor_SetParamaters;
 
 // 电机使能状态
@@ -53,31 +56,30 @@ enum PowerCheckboxFlags
 	St_PowerOff = 1 >> 1 // 未使能
 };
 
-// 电机运行状态
-enum MotorErrorStatusFlags
+enum MC_AxisStates
 {
-	St_Normal = 1 << 0, // 正常
-	St_Abnormal = 1 << 1 // 不正常
-};
-
-// 电机运动状态
-enum MotorMotionStatusFlags
-{
-	St_MoveDone = 1 << 0, // 运动完成
-	St_Moving = 1 << 1, // 正在运动
-	St_Stoped = 1 << 2 // 被停止
+	MC_AXISSTATE_UNDEFINED,
+	MC_AXISSTATE_DISABLED,
+	MC_AXISSTATE_STANDSTILL,
+	MC_AXISSTATE_ERRORSTOP,
+	MC_AXISSTATE_STOPPING,
+	MC_AXISSTATE_HOMING,
+	MC_AXISSTATE_DISCRETEMOTION,
+	MC_AXISSTATE_CONTINUOUSMOTION,
+	MC_AXISSTATE_SYNCHRONIZEDMOTION
 };
 
 // 电机状态
 typedef struct
 {
 	bool st_power; // 是否使能
-	MotorErrorStatusFlags st_error_status; // 运行状态
-	MotorMotionStatusFlags st_motion_status; // 空运动状态
-	int st_status_error_id; // 错误号
+	bool st_error_status; // 运行状态
+	MC_AxisStates st_motion_status; // 运动状态
+	unsigned int st_status_error_id; // 错误号
 	double act_position; // 实际位置
 	double act_velocity; // 实际速度
 	double act_acceleration; // 实际加速度
+	bool InTargetPosition; // 到达目标位置
 }Motor_Status;
 
 
@@ -88,7 +90,6 @@ public:
 	UITrolleyControlTest(UIGLWindow* main_win, const char* title);
 	~UITrolleyControlTest();
 	virtual void Draw();
-
 	virtual EUIMenuCategory GetWinMenuCategory() { return EUIMenuCategory::E_UI_CAT_TOOL; }
 	virtual const char* GetShowShortCut() { return "Ctrl+8"; }
 protected:
@@ -111,9 +112,9 @@ private:
 	int m_trolley_num_tmp = 16; // 被控电机数量（暂时）
 	int m_trolley_num = 16; // 被控电机数量（按下确认按钮后更新）
 	int m_trolley_num_max = 48; // 最大被控电机数量
-	int m_ForceSensor_num_tmp = 4; // 力传感器数量（暂时）
-	int m_ForceSensor_num = 4; // 力传感器数量（按下确认按钮后更新）
-	int m_ForceSensor_num_max = 16; // 最大传感器数量
+	//int m_ForceSensor_num_tmp = 4; // 力传感器数量（暂时）
+	//int m_ForceSensor_num = 4; // 力传感器数量（按下确认按钮后更新）
+	//int m_ForceSensor_num_max = 16; // 最大传感器数量
 	std::vector<int> m_selected_flag; // 被控电机是否可以被“总体控制”控制，不能用std::vector<bool>，因为里面存的不是bool！
 	bool m_selected_flag_ALL; // 全选框，令所有的m_selected_flag置1
 	std::vector<int> m_selected_motion_mode; // 储存每个电机运动模式
@@ -149,14 +150,14 @@ private:
 	bool m_record_flag_jog; // 是否写入文件的判断标志（逐次写入）
 	int m_record_jog_num; // 逐次记录的计数
 
-	std::vector<int> m_slected_force_plot_index; // 选择用来画图的力传感器序号
-	std::vector<ScrollingBuffer> m_vec_hist_data_force; // 每个力传感器的用于画图的滚动缓存区数据
-	std::vector<float> m_vec_hist_data_force_y_max; // 每个力传感器的缓存区中的最大值
-	std::vector<float> m_vec_hist_data_force_y_min; // 每个力传感器的缓存区中的最小值
-	float m_hist_data_force_y_max; // 所有力传感器的缓存区中的最大值
-	float m_hist_data_force_y_min; // 所有力传感器的缓存区中的最小值
-	std::mutex m_vec_hist_data_force_lock; // 力传感器信息互斥锁
-	bool m_selected_force_plot_all; // 全选框，选中所有电机画图
+	//std::vector<int> m_slected_force_plot_index; // 选择用来画图的力传感器序号
+	//std::vector<ScrollingBuffer> m_vec_hist_data_force; // 每个力传感器的用于画图的滚动缓存区数据
+	//std::vector<float> m_vec_hist_data_force_y_max; // 每个力传感器的缓存区中的最大值
+	//std::vector<float> m_vec_hist_data_force_y_min; // 每个力传感器的缓存区中的最小值
+	//float m_hist_data_force_y_max; // 所有力传感器的缓存区中的最大值
+	//float m_hist_data_force_y_min; // 所有力传感器的缓存区中的最小值
+	//std::mutex m_vec_hist_data_force_lock; // 力传感器信息互斥锁
+	//bool m_selected_force_plot_all; // 全选框，选中所有电机画图
 
 	std::mutex m_thread_read_pos_lock;
 	std::mutex m_thread_read_vel_lock;
@@ -175,8 +176,10 @@ private:
 	bool* myArray_set_enable = nullptr;
 	int m_ReadFrequency_hz; // 主动ads读取的频率
 
-	std::vector<double> Vel_motor_setvelocity_tmp; // 速度暂存值
-	std::vector<double> Vel_motor_setposition_tmp; // 位置暂存值
 	std::vector<int> Con_con_flag; // 执行连续模式的标志
+
+	bool Enable_this_module;
+
+	AdsExpand* m_AdsExpand = nullptr;
 };
 
