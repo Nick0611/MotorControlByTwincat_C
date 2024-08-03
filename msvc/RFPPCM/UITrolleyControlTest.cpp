@@ -24,27 +24,6 @@ std::string MC_AxisStateToString(MC_AxisStates state)
 
 void UITrolleyControlTest::Thread_ReadActPos()
 {
-	//long      nErr, nPort;	//定义端口变量
-	//AmsAddr   Addr;		//定义AMS地址变量
-	//PAmsAddr  pAddr = &Addr;//定义端口地址变量
-	//unsigned long pcbReturn;
-	//nPort = AdsPortOpenEx();		//打开ADS通讯端口
-	//if (ads_local_or_CX_flag)
-	//{
-	//	pAddr->netId.b[0] = m_pAddr->netId.b[0];  //手动填写目标设备的AMSNETID
-	//	pAddr->netId.b[1] = m_pAddr->netId.b[1]; //在例子中设备通讯AMSNETID为5.23.20.78.1.1
-	//	pAddr->netId.b[2] = m_pAddr->netId.b[2];
-	//	pAddr->netId.b[3] = m_pAddr->netId.b[3];
-	//	pAddr->netId.b[4] = m_pAddr->netId.b[4];
-	//	pAddr->netId.b[5] = m_pAddr->netId.b[5];
-	//}
-	//else
-	//{
-	//	long nErr = AdsGetLocalAddressEx(nPort, pAddr); //自动获取本地地址
-	//	if (nErr) UI_ERROR("Error: AdsGetLocalAddress: %ld", nErr);
-	//}
-	//pAddr->port = 851;			//TC3的通讯端口为851
-	//unsigned long lHdlVar;   	//创建句柄
 	char szVar_pos[] = { "main.pos" };
 	AdsExpand mmads(m_pAddr);
 	while (!thread_read_pos_stop_flag)
@@ -52,23 +31,6 @@ void UITrolleyControlTest::Thread_ReadActPos()
 		auto startTime = std::chrono::high_resolution_clock::now();
 		double* myArray = new double[m_trolley_num];
 		mmads.ReadArray(szVar_pos, myArray, m_trolley_num);
-		//nErr = AdsSyncReadWriteReqEx2(nPort, pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_pos), szVar_pos, &pcbReturn);
-		//if (nErr) UI_ERROR("2Error: AdsSyncReadWriteReq: %ld", nErr);
-		//{
-		//	// 注意：不能直接sizeof(myArray)，大小不对！！！
-		//	nErr = AdsSyncReadReqEx2(nPort, pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double)* m_trolley_num, &myArray[0], &pcbReturn); //这个读的是固定大小的数组哇
-		//	if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-		//	else
-		//	{
-		//		std::lock_guard<std::mutex> lock(m_thread_read_pos_lock);
-		//		for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
-		//		{
-		//			float t = (float)glfwGetTime();
-		//			m_vec_hist_data_pos[i].AddPoint(t, myArray[i]);
-		//			m_motor_status[i].act_position = myArray[i];
-		//		}
-		//	}
-		//}
 		{
 			std::lock_guard<std::mutex> lock(m_thread_read_pos_lock);
 			for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
@@ -87,50 +49,23 @@ void UITrolleyControlTest::Thread_ReadActPos()
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 		}
 	}
-	//AdsPortCloseEx(nPort);
 }
 void UITrolleyControlTest::Thread_ReadActVel()
 {
-	long      nErr, nPort;	//定义端口变量
-	AmsAddr   Addr;		//定义AMS地址变量
-	PAmsAddr  pAddr = &Addr;//定义端口地址变量
-	unsigned long pcbReturn;
-	nPort = AdsPortOpenEx();		//打开ADS通讯端口
-	if (ads_local_or_CX_flag)
-	{
-		pAddr->netId.b[0] = m_pAddr->netId.b[0];  //手动填写目标设备的AMSNETID
-		pAddr->netId.b[1] = m_pAddr->netId.b[1]; //在例子中设备通讯AMSNETID为5.23.20.78.1.1
-		pAddr->netId.b[2] = m_pAddr->netId.b[2];
-		pAddr->netId.b[3] = m_pAddr->netId.b[3];
-		pAddr->netId.b[4] = m_pAddr->netId.b[4];
-		pAddr->netId.b[5] = m_pAddr->netId.b[5];
-	}
-	else
-	{
-		long nErr = AdsGetLocalAddressEx(nPort, pAddr); //自动获取本地地址
-		if (nErr) UI_ERROR("Error: AdsGetLocalAddress: %ld", nErr);
-	}
-	pAddr->port = 851;			//TC3的通讯端口为851
-	unsigned long lHdlVar;   	//创建句柄
 	char szVar_vel[] = { "main.vel" };
+	AdsExpand mmads(m_pAddr);
 	while (!thread_read_vel_stop_flag)
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 		double* myArray = new double[m_trolley_num];
-		nErr = AdsSyncReadWriteReqEx2(nPort, pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_vel), szVar_vel, &pcbReturn);
-		if (nErr) UI_ERROR("3Error: AdsSyncReadWriteReq: %ld", nErr);
+		mmads.ReadArray(szVar_vel, myArray, m_trolley_num);
 		{
-			nErr = AdsSyncReadReqEx2(nPort, pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0], &pcbReturn); //这个读的是固定大小的数组哇
-			if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-			else
+			std::lock_guard<std::mutex> lock(m_thread_read_vel_lock);
+			for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
 			{
-				std::lock_guard<std::mutex> lock(m_thread_read_vel_lock);
-				for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
-				{
-					float t = (float)glfwGetTime();
-					m_vec_hist_data_vel[i].AddPoint(t, myArray[i]);
-					m_motor_status[i].act_velocity = myArray[i];
-				}
+				float t = (float)glfwGetTime();
+				m_vec_hist_data_vel[i].AddPoint(t, myArray[i]);
+				m_motor_status[i].act_velocity = myArray[i];
 			}
 		}
 		delete[] myArray;
@@ -142,51 +77,23 @@ void UITrolleyControlTest::Thread_ReadActVel()
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 		}
 	}
-	AdsPortCloseEx(nPort);
 }
 void UITrolleyControlTest::Thread_ReadActAcc()
 {
-	long      nErr, nPort;	//定义端口变量
-	AmsAddr   Addr;		//定义AMS地址变量
-	PAmsAddr  pAddr = &Addr;//定义端口地址变量
-	unsigned long pcbReturn;
-	nPort = AdsPortOpenEx();		//打开ADS通讯端口
-	if (ads_local_or_CX_flag)
-	{
-		pAddr->netId.b[0] = m_pAddr->netId.b[0];  //手动填写目标设备的AMSNETID
-		pAddr->netId.b[1] = m_pAddr->netId.b[1]; //在例子中设备通讯AMSNETID为5.23.20.78.1.1
-		pAddr->netId.b[2] = m_pAddr->netId.b[2];
-		pAddr->netId.b[3] = m_pAddr->netId.b[3];
-		pAddr->netId.b[4] = m_pAddr->netId.b[4];
-		pAddr->netId.b[5] = m_pAddr->netId.b[5];
-	}
-	else
-	{
-		long nErr = AdsGetLocalAddressEx(nPort, pAddr); //自动获取本地地址
-		if (nErr) UI_ERROR("Error: AdsGetLocalAddress: %ld", nErr);
-	}
-	pAddr->port = 851;			//TC3的通讯端口为851
-	unsigned long lHdlVar;   	//创建句柄
 	char szVar_acc[] = { "main.acc" };
-
+	AdsExpand mmads(m_pAddr);
 	while (!thread_read_acc_stop_flag)
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 		double* myArray = new double[m_trolley_num];
-		nErr = AdsSyncReadWriteReqEx2(nPort, pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_acc), szVar_acc, &pcbReturn);
-		if (nErr) UI_ERROR("4Error: AdsSyncReadWriteReq: %ld", nErr);
+		mmads.ReadArray(szVar_acc, myArray, m_trolley_num);
 		{
-			nErr = AdsSyncReadReqEx2(nPort, pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0], &pcbReturn); //这个读的是固定大小的数组哇
-			if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-			else
+			std::lock_guard<std::mutex> lock(m_thread_read_acc_lock);
+			for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
 			{
-				std::lock_guard<std::mutex> lock(m_thread_read_acc_lock);
-				for (unsigned int i = 0; i < m_trolley_num; i++)//用for循环语句来实现读取数组中的元素
-				{
-					float t = (float)glfwGetTime();
-					m_vec_hist_data_acc[i].AddPoint(t, myArray[i]);
-					m_motor_status[i].act_acceleration = myArray[i];
-				}
+				float t = (float)glfwGetTime();
+				m_vec_hist_data_acc[i].AddPoint(t, myArray[i]);
+				m_motor_status[i].act_acceleration = myArray[i];
 			}
 		}
 		delete[] myArray;
@@ -198,7 +105,46 @@ void UITrolleyControlTest::Thread_ReadActAcc()
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 		}
 	}
-	AdsPortCloseEx(nPort);
+}
+
+void UITrolleyControlTest::Thread_m_test()
+{
+	short itx[3] = { 0 };
+	char szVar_acc[] = { "AdsQueue.ArrayQueueBuffer_Len" };
+	char szVar_queue[256] = { 0 };
+	sprintf(szVar_queue,"AdsQueue.TrajectoryPosition_FromAds[%d]", 1);
+	char szVar_itx[] = { "AdsQueue.itx" };
+	AdsExpand mmads(m_pAddr);
+	while (!thread_DoubleQueue_Write_stop_flag)
+	{
+		auto startTime = std::chrono::high_resolution_clock::now();
+		short* myArray = new short[m_trolley_num];
+		double* myArray_ads = new double[1];
+		long nErr = mmads.ReadArray(szVar_acc, myArray, m_trolley_num);
+		{
+			if (myArray[0] < QueueBufferLen && !nErr && itx[0]<10000)
+			{
+				std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
+				myArray_ads[0] = test_array_ads[itx[0]];
+				//myArray_ads[1] = 12;
+				//myArray_ads[2] = 13;
+				mmads.WriteArray(szVar_queue, myArray_ads, 1);
+				itx[0]++;
+				mmads.WriteArray(szVar_itx, itx, m_trolley_num);
+				UI_ERROR("%d, %d, %lf", myArray[0], itx[0], myArray_ads[0]);
+			}
+
+		}
+		delete[] myArray;
+		delete[] myArray_ads;
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+		int sleepTime = int(1000 / 50) - static_cast<int>(elapsedTime);
+		if (sleepTime > 0)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+		}
+	} 
 }
 bool UITrolleyControlTest::LoadCfg()
 {
@@ -424,6 +370,7 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	//m_hist_data_force_y_min = 1;
 
 	Con_con_flag.resize(m_trolley_num, 0);
+	PressDown.resize(m_trolley_num, 0);
 
 	m_record_flag_continuous = false;
 	m_record_flag_jog = false;
@@ -444,6 +391,12 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	}
 	m_pAddr->port = 851;			//TC3的通讯端口为851
 	AdsPortCloseEx(m_nPort);
+	m_AdsExpand = new AdsExpand(m_pAddr);
+
+	for (int i = 0; i < 10000; ++i)
+	{
+		test_array_ads[i] = i;
+	}
 }
 
 UITrolleyControlTest::~UITrolleyControlTest()
@@ -451,6 +404,7 @@ UITrolleyControlTest::~UITrolleyControlTest()
 	if (m_AdsExpand)
 	{
 		delete m_AdsExpand;
+		m_AdsExpand = nullptr;
 	}
 	{
 		std::lock_guard<std::mutex> lock(m_thread_read_pos_lock);
@@ -467,6 +421,13 @@ UITrolleyControlTest::~UITrolleyControlTest()
 	if (thread_read_pos.joinable()) thread_read_pos.join();
 	if (thread_read_vel.joinable()) thread_read_vel.join();
 	if (thread_read_acc.joinable()) thread_read_acc.join();
+
+	{
+		std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
+		thread_DoubleQueue_Write_stop_flag = true;
+	}
+	if (thread_DoubleQueue_Write.joinable()) thread_DoubleQueue_Write.join();
+
 	AdsPortCloseEx(m_nPort);
 }
 
@@ -481,6 +442,20 @@ void UITrolleyControlTest::Draw()
 		ImGui::End();
 		return;
 	}
+
+	char sss[] = { "test" };
+	if (ImGui::Button(sss))
+	{
+		{
+			std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
+			thread_DoubleQueue_Write_stop_flag = false;
+		}
+		if (!thread_DoubleQueue_Write.joinable())
+		{
+			thread_DoubleQueue_Write = std::thread(&UITrolleyControlTest::Thread_m_test, this);
+		}
+	}
+
 
 	// 0. 是否启动该模块，包括三个ADS读线程和一个全局ADS线程
 	char buf_module_enable[256] = { 0 };
@@ -497,6 +472,11 @@ void UITrolleyControlTest::Draw()
 		m_pAddr->port = 851;			//TC3的通讯端口为851
 		AdsPortCloseEx(m_nPort);
 
+		if (m_AdsExpand)
+		{
+			delete m_AdsExpand;
+			m_AdsExpand = nullptr;
+		}
 		m_AdsExpand = new AdsExpand(m_pAddr);
 
 		{
@@ -529,47 +509,30 @@ void UITrolleyControlTest::Draw()
 	if (Enable_this_module)
 	{
 		// 读取电机使能状态
-		unsigned long lHdlVar;   	//创建句柄-使能
-		unsigned long pcbReturn;
 		char szVar_EnableStatus[] = { "main.GetEnableStatus" };
 		bool* myArray_Enable = new bool[m_trolley_num];
-		//long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_EnableStatus), szVar_EnableStatus, &pcbReturn);
-		//if (nErr) UI_ERROR("20Error: AdsSyncReadWriteReq: %ld", nErr);
-		//{
-		//	nErr = AdsSyncReadReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_Enable[0], &pcbReturn); //这个读的是固定大小的数组哇
-		//	if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-		//	else
-		//	{
-		//		for (int j = 0; j < m_trolley_num; j++)
-		//		{
-		//			m_motor_status[j].st_power = myArray_Enable[j];
-		//			m_motor_params[j].set_enable = myArray_Enable[j];
-		//		}
-		//	}
-		//}
-		m_AdsExpand->ReadArray(szVar_EnableStatus, myArray_Enable, m_trolley_num);
-		for (int j = 0; j < m_trolley_num; j++)
+		long nErr = m_AdsExpand->ReadArray(szVar_EnableStatus, myArray_Enable, m_trolley_num);
+		if (nErr) UI_ERROR("AdsError: %ld", nErr);
+		else
 		{
-			m_motor_status[j].st_power = myArray_Enable[j];
-			m_motor_params[j].set_enable = myArray_Enable[j];
+			for (int j = 0; j < m_trolley_num; j++)
+			{
+				m_motor_status[j].st_power = myArray_Enable[j];
+				m_motor_params[j].set_enable = myArray_Enable[j];
+			}
 		}
-		//delete[] myArray_Enable;
-		
+		delete[] myArray_Enable;
 
 		// 读取运动状态
 		char szVar_MotionStatus[] = { "main.m_MotionState" };
 		short* myArray_MotionStatus = new short[m_trolley_num];
-		long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_MotionStatus), szVar_MotionStatus, &pcbReturn);
-		if (nErr) UI_ERROR("21Error: AdsSyncReadWriteReq: %ld", nErr);
+		nErr = m_AdsExpand->ReadArray(szVar_MotionStatus, myArray_MotionStatus, m_trolley_num);
+		if (nErr) UI_ERROR("AdsError: %ld", nErr);
+		else
 		{
-			nErr = AdsSyncReadReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(short) * m_trolley_num, &myArray_MotionStatus[0], &pcbReturn); //这个读的是固定大小的数组哇
-			if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-			else
+			for (int j = 0; j < m_trolley_num; j++)
 			{
-				for (int j = 0; j < m_trolley_num; j++)
-				{
-					m_motor_status[j].st_motion_status = static_cast<MC_AxisStates>(myArray_MotionStatus[j]);
-				}
+				m_motor_status[j].st_motion_status = static_cast<MC_AxisStates>(myArray_MotionStatus[j]);
 			}
 		}
 		delete[] myArray_MotionStatus;
@@ -577,37 +540,29 @@ void UITrolleyControlTest::Draw()
 		// 读取电机错误状态
 		char szVar_ErrorStatus[] = { "main.GetErrorStatus" };
 		bool* myArray_Error = new bool[m_trolley_num];
-		nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_ErrorStatus), szVar_ErrorStatus, &pcbReturn);
-		if (nErr) UI_ERROR("22Error: AdsSyncReadWriteReq: %ld", nErr);
+		nErr = m_AdsExpand->ReadArray(szVar_ErrorStatus, myArray_Error, m_trolley_num);
+		if (nErr) UI_ERROR("AdsError: %ld", nErr);
+		else
 		{
-			nErr = AdsSyncReadReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_Error[0], &pcbReturn); //这个读的是固定大小的数组哇
-			if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-			else
+			for (int j = 0; j < m_trolley_num; j++)
 			{
-				for (int j = 0; j < m_trolley_num; j++)
+				m_motor_status[j].st_error_status = myArray_Error[j];
+				if (myArray_Error[j])
 				{
-					m_motor_status[j].st_error_status = myArray_Error[j];
-					if (myArray_Error[j])
-					{
-						// 读取电机错误ID
-						char szVar_ErrorID[] = { "main.GetErrorId" };
-						unsigned int* myArray_ErrorID = new unsigned int[m_trolley_num];
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_ErrorID), szVar_ErrorID, &pcbReturn);
-						if (nErr) UI_ERROR("23Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							nErr = AdsSyncReadReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(unsigned int) * m_trolley_num, &myArray_ErrorID[0], &pcbReturn); //这个读的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-							else
-							{
-								m_motor_status[j].st_status_error_id = myArray_ErrorID[j];
-							}
-						}
-						delete[] myArray_ErrorID;
-					}
+					// 读取电机错误ID
+					char szVar_ErrorID[] = { "main.GetErrorId" };
+					unsigned int* myArray_ErrorID = new unsigned int[m_trolley_num];
+					nErr = m_AdsExpand->ReadArray(szVar_ErrorID, myArray_ErrorID, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					else
 					{
-						m_motor_status[j].st_status_error_id = 0;
+						m_motor_status[j].st_status_error_id = myArray_ErrorID[j];
 					}
+					delete[] myArray_ErrorID;					
+				}
+				else
+				{
+					m_motor_status[j].st_status_error_id = 0;
 				}
 			}
 		}
@@ -616,17 +571,13 @@ void UITrolleyControlTest::Draw()
 		// 读取InTargetPosition状态
 		char szVar_InTargetPosition[] = { "main.GetInTargetPosition" };
 		bool* myArray_InTargetPosition = new bool[m_trolley_num];
-		nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_InTargetPosition), szVar_InTargetPosition, &pcbReturn);
-		if (nErr) UI_ERROR("24Error: AdsSyncReadWriteReq: %ld", nErr);
+		nErr = m_AdsExpand->ReadArray(szVar_InTargetPosition, myArray_InTargetPosition, m_trolley_num);
+		if (nErr) UI_ERROR("AdsError: %ld", nErr);
+		else
 		{
-			nErr = AdsSyncReadReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_InTargetPosition[0], &pcbReturn); //这个读的是固定大小的数组哇
-			if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-			else
+			for (int j = 0; j < m_trolley_num; j++)
 			{
-				for (int j = 0; j < m_trolley_num; j++)
-				{
-					m_motor_status[j].InTargetPosition = myArray_InTargetPosition[j];
-				}
+				m_motor_status[j].InTargetPosition = myArray_InTargetPosition[j];
 			}
 		}
 		delete[] myArray_InTargetPosition;
@@ -711,6 +662,7 @@ void UITrolleyControlTest::Draw()
 					m_vec_hist_data_acc_y_max.resize(m_trolley_num, 1);
 
 					Con_con_flag.resize(m_trolley_num, 0);
+					PressDown.resize(m_trolley_num, 0);
 				}
 
 				ImGui::SameLine();
@@ -761,27 +713,14 @@ void UITrolleyControlTest::Draw()
 					myArray_stop[i] = m_motor_params[i].set_stop;
 					myArray[i] = m_motor_params[i].selected_motion_mode;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_Motion_Exc), szVar_Motion_Exc, &pcbReturn);
-				if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_Motion_Exc[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
-				nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-				if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
-				nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-				if (nErr) UI_ERROR("12Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(short) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-				}
+
+				long nErr = m_AdsExpand->WriteArray(szVar_Motion_Exc, myArray_Motion_Exc, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
+				nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
+				nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
+
 				delete[] myArray_Motion_Exc;
 				delete[] myArray_stop;
 				delete[] myArray;
@@ -795,7 +734,7 @@ void UITrolleyControlTest::Draw()
 			ImGui::SameLine();
 			if (ImGui::BeginCombo(u8"运动模式列表", preview_value, 0)) // 总体运动模式设置列表
 			{
-				for (int i = 0; i < 5; i++)
+				for (int i = 0; i < motorMotionModeCount; i++)
 				{
 					stbsp_sprintf(buf, u8"%s %s", ICON_FA_MICROCHIP, MotorModeNames[i]);
 					if (ImGui::Selectable(buf, m_selected_motion_mode_ALL == i))
@@ -828,14 +767,8 @@ void UITrolleyControlTest::Draw()
 					}
 					myArray[i] = m_motor_params[i].set_enable;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-				if (nErr) UI_ERROR("5Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
-				UI_ERROR("%d", m_motor_params[1].set_enable);
+				long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
 				delete[] myArray;
 			}
 
@@ -855,14 +788,8 @@ void UITrolleyControlTest::Draw()
 					}
 					myArray[i] = m_motor_params[i].set_enable;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-				if (nErr) UI_ERROR("5Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
-				UI_ERROR("%d", m_motor_params[1].set_enable);
+				long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
 				delete[] myArray;
 			}
 
@@ -891,20 +818,10 @@ void UITrolleyControlTest::Draw()
 					myArray_motion_exc[i] = m_motor_params[i].motion_exc;
 					myArray[i] = m_motor_params[i].set_halt;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_exc), szVar_exc, &pcbReturn);
-				if (nErr) UI_ERROR("7Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_motion_exc[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-				}
-				nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_halt), szVar_halt, &pcbReturn);
-				if (nErr) UI_ERROR("8Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
+				long nErr = m_AdsExpand->WriteArray(szVar_exc, myArray_motion_exc, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
+				nErr = m_AdsExpand->WriteArray(szVar_halt, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
 				delete[] myArray_motion_exc;
 				delete[] myArray;
 			}
@@ -932,20 +849,10 @@ void UITrolleyControlTest::Draw()
 					myArray_motion_exc[i] = m_motor_params[i].motion_exc;
 					m_motor_params[i].set_continue = false;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-				if (nErr) UI_ERROR("9Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
-				nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_motion_exc), szVar_motion_exc, &pcbReturn);
-				if (nErr) UI_ERROR("10Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_motion_exc[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-				}
+				long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
+				nErr = m_AdsExpand->WriteArray(szVar_motion_exc, myArray_motion_exc, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
 				delete[] myArray;
 				delete[] myArray_motion_exc;
 			}
@@ -967,13 +874,8 @@ void UITrolleyControlTest::Draw()
 					myArray[i] = m_motor_params[i].set_clear;
 					m_motor_params[i].set_clear = false;
 				}
-				long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-				if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-				{
-					// 注意：不能直接sizeof(myArray)，大小不对！！！
-					nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-					if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-				}
+				long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+				if (nErr) UI_ERROR("AdsError: %ld", nErr);
 				delete[] myArray;
 			}
 
@@ -1096,13 +998,8 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray[i] = m_motor_params[i].Tarvelocity;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("13Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
 				}
 
@@ -1115,12 +1012,13 @@ void UITrolleyControlTest::Draw()
 
 				ImGui::SameLine();
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (PressDown_All) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
 				stbsp_sprintf(buf, u8"%s 一键开始运动", ICON_FA_LONG_ARROW_ALT_UP);
 				if (ImGui::Button(buf))
 				{
+					PressDown_All = true;
 					// 开始运动按钮点击后，先clear掉可能存在的stop状态
 					unsigned long lHdlVar;   	//创建句柄-使能
 					unsigned long pcbReturn;
@@ -1131,16 +1029,12 @@ void UITrolleyControlTest::Draw()
 						if (m_selected_flag[i])
 						{
 							m_motor_params[i].set_stop = false;
+							PressDown[i] = 1;
 						}
 						myArray_stop[i] = m_motor_params[i].set_stop;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray_stop;
 
 					char szVar_clear[] = { "main.SetClear" };
@@ -1153,13 +1047,8 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray_clear[i] = m_motor_params[i].set_clear;
 					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-					if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray_clear;
 
 					char szVar[] = { "main.m_Motion_Exc" };
@@ -1172,14 +1061,44 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray[i] = m_motor_params[i].motion_exc;
 					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("14Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
+					nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
+				}
+				ImGui::PopStyleColor(4);
+
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+				stbsp_sprintf(buf, u8"%s 一键停止运动", ICON_FA_SHARE);
+				if (ImGui::Button(buf))
+				{
+					PressDown_All = false;
+					unsigned long lHdlVar;   	//创建句柄-使能
+					unsigned long pcbReturn;
+					char szVar[] = { "main.m_Motion_Exc" };
+					char szVar_stop[] = { "main.SetStop" };
+					bool* myArray = new bool[m_trolley_num];
+					bool* myArray_stop = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							PressDown[i] = 0;
+							m_motor_params[i].motion_exc = false;
+							m_motor_params[i].set_stop = true;
+						}
+						myArray[i] = m_motor_params[i].motion_exc;
+						myArray_stop[i] = m_motor_params[i].set_stop;
+					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray;
+					delete[] myArray_stop;
 				}
 				ImGui::PopStyleColor(4);
 				break;
@@ -1187,26 +1106,13 @@ void UITrolleyControlTest::Draw()
 				stbsp_sprintf(buf, u8"%s 一键设置位置", ICON_FA_GRIN_STARS);
 				if (ImGui::Button(buf))
 				{
-					unsigned long lHdlVar;   	//创建句柄-使能
-					unsigned long pcbReturn;
-					char szVar[] = { "main.m_Move_Pos" };
-					double* myArray = new double[m_trolley_num];
 					for (int i = 0; i < m_trolley_num; ++i)
 					{
 						if (m_selected_flag[i])
 						{
 							m_motor_params[i].Tarposition = m_motor_params_ALL.Tarposition;
 						}
-						myArray[i] = m_motor_params[i].Tarposition;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("15Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
-					delete[] myArray;
 				}
 
 				ImGui::SameLine();
@@ -1234,13 +1140,8 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray[i] = m_motor_params[i].Tarvelocity;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("13Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
 				}
 
@@ -1268,17 +1169,13 @@ void UITrolleyControlTest::Draw()
 					{
 						if (m_selected_flag[i])
 						{
+							PressDown[i] = 1;
 							m_motor_params[i].set_stop = false;
 						}
 						myArray_stop[i] = m_motor_params[i].set_stop;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray_stop;
 
 					char szVar_clear[] = { "main.SetClear" };
@@ -1291,14 +1188,19 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray_clear[i] = m_motor_params[i].set_clear;
 					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-					if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray_clear;
+
+					char szVar_position[] = { "main.m_Move_Pos" };
+					double* myArray_position = new double[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						myArray_position[i] = m_motor_params[i].Tarposition;
+					}
+					nErr = m_AdsExpand->WriteArray(szVar_position, myArray_position, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray_position;
 
 					char szVar[] = { "main.m_Motion_Exc" };
 					bool* myArray = new bool[m_trolley_num];
@@ -1310,15 +1212,45 @@ void UITrolleyControlTest::Draw()
 						}
 						myArray[i] = m_motor_params[i].motion_exc;
 					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("14Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
+					nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
 				}				
+				ImGui::PopStyleColor(4);
+
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+				stbsp_sprintf(buf, u8"%s 一键停止运动", ICON_FA_SHARE);
+				if (ImGui::Button(buf))
+				{
+					PressDown_All = false;
+					unsigned long lHdlVar;   	//创建句柄-使能
+					unsigned long pcbReturn;
+					char szVar[] = { "main.m_Motion_Exc" };
+					char szVar_stop[] = { "main.SetStop" };
+					bool* myArray = new bool[m_trolley_num];
+					bool* myArray_stop = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							PressDown[i] = 0;
+							m_motor_params[i].motion_exc = false;
+							m_motor_params[i].set_stop = true;
+						}
+						myArray[i] = m_motor_params[i].motion_exc;
+						myArray_stop[i] = m_motor_params[i].set_stop;
+					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray;
+					delete[] myArray_stop;
+				}
 				ImGui::PopStyleColor(4);
 				break;
 			case Continus_mode:
@@ -1340,13 +1272,8 @@ void UITrolleyControlTest::Draw()
 							}
 							myArray[i] = m_motor_params[i].Tarvelocity;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("18Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 					else
@@ -1379,12 +1306,13 @@ void UITrolleyControlTest::Draw()
 
 				ImGui::SameLine();
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (PressDown_All) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
 				stbsp_sprintf(buf, u8"%s 一键开始运动", ICON_FA_RUNNING);
 				if (ImGui::Button(buf))
 				{
+					PressDown_All = true;
 					unsigned long lHdlVar;   	//创建句柄-使能
 					unsigned long pcbReturn;
 					char szVar_stop[] = { "main.SetStop" };
@@ -1397,6 +1325,7 @@ void UITrolleyControlTest::Draw()
 					{
 						if (m_selected_flag[i])
 						{
+							PressDown[i] = 1;
 							m_motor_params[i].set_stop = false;
 							m_motor_params[i].set_clear = true;
 							Con_con_flag[i] = 1;
@@ -1406,27 +1335,12 @@ void UITrolleyControlTest::Draw()
 						myArray_clear[i] = m_motor_params[i].set_clear;
 						myArray[i] = m_motor_params[i].motion_exc;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-					if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray_clear;
 					delete[] myArray_stop;
 					delete[] myArray;
@@ -1441,6 +1355,7 @@ void UITrolleyControlTest::Draw()
 				stbsp_sprintf(buf, u8"%s 一键停止运动", ICON_FA_SHARE);
 				if (ImGui::Button(buf))
 				{
+					PressDown_All = false;
 					unsigned long lHdlVar;   	//创建句柄-使能
 					unsigned long pcbReturn;
 					char szVar[] = { "main.m_Motion_Exc" };
@@ -1451,6 +1366,7 @@ void UITrolleyControlTest::Draw()
 					{
 						if (m_selected_flag[i])
 						{
+							PressDown[i] = 0;
 							Con_con_flag[i] = 0;
 							m_motor_params[i].motion_exc = false;
 							m_motor_params[i].set_stop = true;
@@ -1458,20 +1374,10 @@ void UITrolleyControlTest::Draw()
 						myArray[i] = m_motor_params[i].motion_exc;
 						myArray_stop[i] = m_motor_params[i].set_stop;
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
-					nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-					if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
 					delete[] myArray_stop;
 				}
@@ -1489,13 +1395,8 @@ void UITrolleyControlTest::Draw()
 							myArray[j] = m_motor_params[j].Tarposition;
 						}
 					}
-					long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-					if (nErr) UI_ERROR("19Error: AdsSyncReadWriteReq: %ld", nErr);
-					{
-						// 注意：不能直接sizeof(myArray)，大小不对！！！
-						nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-						if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
 					delete[] myArray;
 				}
 
@@ -1534,13 +1435,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].set_enable;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("5Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					} 
 
@@ -1557,13 +1453,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].set_enable;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("5Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 
@@ -1584,13 +1475,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_motion_exc[i] = m_motor_params[i].motion_exc;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_exc), szVar_exc, &pcbReturn);
-						if (nErr) UI_ERROR("7Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_motion_exc[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar_exc, myArray_motion_exc, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_motion_exc;
 
 						char szVar_halt[] = { "main.SetHalt" };
@@ -1602,13 +1488,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].set_halt;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_halt), szVar_halt, &pcbReturn);
-						if (nErr) UI_ERROR("8Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_halt, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 					ImGui::PopStyleColor(4);
@@ -1627,13 +1508,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].set_continue;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("9Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 						m_motor_params[j].set_continue = false;
 
@@ -1644,13 +1520,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_motion_exc[i] = m_motor_params[i].motion_exc;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_motion_exc), szVar_motion_exc, &pcbReturn);
-						if (nErr) UI_ERROR("10Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_motion_exc[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_motion_exc, myArray_motion_exc, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_motion_exc;
 					}
 
@@ -1667,13 +1538,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].set_clear;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 					else
@@ -1701,7 +1567,7 @@ void UITrolleyControlTest::Draw()
 					ImGui::SameLine();
 					if (ImGui::BeginCombo(u8"运动模式列表", preview_value, 0))
 					{
-						for (int i = 0; i < 5; i++)
+						for (int i = 0; i < motorMotionModeCount; i++)
 						{
 							stbsp_sprintf(buf, u8"%s %s", ICON_FA_MICROCHIP, MotorModeNames[i]);
 							if (ImGui::Selectable(buf, m_selected_motion_mode[j] == i)) // 列表中的选项被按下检测
@@ -1720,13 +1586,8 @@ void UITrolleyControlTest::Draw()
 									{
 										myArray_Motion_Exc[i] = m_motor_params[i].motion_exc;
 									}
-									long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_Motion_Exc), szVar_Motion_Exc, &pcbReturn);
-									if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-									{
-										// 注意：不能直接sizeof(myArray)，大小不对！！！
-										nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_Motion_Exc[0]); //这个写的是固定大小的数组哇
-										if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-									}
+									long nErr = m_AdsExpand->WriteArray(szVar_Motion_Exc, myArray_Motion_Exc, m_trolley_num);
+									if (nErr) UI_ERROR("AdsError: %ld", nErr);
 									delete[] myArray_Motion_Exc;
 
 									char szVar_stop[] = { "main.SetStop" };
@@ -1736,13 +1597,8 @@ void UITrolleyControlTest::Draw()
 									{
 										myArray_stop[i] = m_motor_params[i].set_stop;
 									}
-									nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-									if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-									{
-										// 注意：不能直接sizeof(myArray)，大小不对！！！
-										nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-										if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-									}
+									nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+									if (nErr) UI_ERROR("AdsError: %ld", nErr);
 									delete[] myArray_stop;
 
 									char szVar[] = { "main.m_SelectedMotionMode" };
@@ -1752,13 +1608,8 @@ void UITrolleyControlTest::Draw()
 									{
 										myArray[i] = m_motor_params[i].selected_motion_mode;
 									}
-									nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-									if (nErr) UI_ERROR("12Error: AdsSyncReadWriteReq: %ld", nErr);
-									{
-										// 注意：不能直接sizeof(myArray)，大小不对！！！
-										nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(short) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-										if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-									}
+									nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+									if (nErr) UI_ERROR("AdsError: %ld", nErr);
 									delete[] myArray;
 								}
 							}
@@ -1767,7 +1618,6 @@ void UITrolleyControlTest::Draw()
 					}
 				}
 				//ImGui::EndGroup();
-
 				switch (m_selected_motion_mode[j])
 				{
 				case Free_mode:
@@ -1883,13 +1733,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].Tarvelocity;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("13Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 
@@ -1902,12 +1747,13 @@ void UITrolleyControlTest::Draw()
 
 					ImGui::SameLine();
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_Button, ((bool)PressDown[j]) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
 					stbsp_sprintf(buf, u8"%s 开始运动", ICON_FA_LONG_ARROW_ALT_UP);
 					if (ImGui::Button(buf))
 					{
+						PressDown[j] = 1;
 						// 开始运动按钮点击后，先clear掉可能存在的stop状态
 						unsigned long lHdlVar;   	//创建句柄-使能
 						unsigned long pcbReturn;
@@ -1918,13 +1764,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_stop[i] = m_motor_params[i].set_stop;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_stop;
 
 						char szVar_clear[] = { "main.SetClear" };
@@ -1934,13 +1775,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_clear[i] = m_motor_params[i].set_clear;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-						if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_clear;
 
 						char szVar[] = { "main.m_Motion_Exc" };
@@ -1950,14 +1786,45 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].motion_exc;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("14Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
+					}
+					ImGui::PopStyleColor(4);
+
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+					stbsp_sprintf(buf, u8"%s 停止运动", ICON_FA_SHARE);
+					if (ImGui::Button(buf))
+					{
+						PressDown[j] = false;
+
+						unsigned long lHdlVar;   	//创建句柄-使能
+						unsigned long pcbReturn;
+						char szVar[] = { "main.m_Motion_Exc" };
+						m_motor_params[j].motion_exc = false;
+						bool* myArray = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray[i] = m_motor_params[i].motion_exc;
+						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray;
+
+						char szVar_stop[] = { "main.SetStop" };
+						m_motor_params[j].set_stop = true;
+						bool* myArray_stop = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_stop[i] = m_motor_params[i].set_stop;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_stop;
 					}
 					ImGui::PopStyleColor(4);
 					break;
@@ -1965,23 +1832,7 @@ void UITrolleyControlTest::Draw()
 					stbsp_sprintf(buf, u8"%s 设置位置", ICON_FA_GRIN_STARS);
 					if (ImGui::Button(buf))
 					{
-						unsigned long lHdlVar;   	//创建句柄-使能
-						unsigned long pcbReturn;
-						char szVar[] = { "main.m_Move_Pos" };
 						m_motor_params[j].Tarposition = m_motor_params[j].Tarposition;
-						double* myArray = new double[m_trolley_num];
-						for (int i = 0; i < m_trolley_num; ++i)
-						{
-							myArray[i] = m_motor_params[i].Tarposition;
-						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("15Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
-						delete[] myArray;
 					}
 
 					ImGui::SameLine();
@@ -2005,13 +1856,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].Tarvelocity;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("16Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 
@@ -2024,7 +1870,7 @@ void UITrolleyControlTest::Draw()
 
 					ImGui::SameLine();
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_Button, ((bool)PressDown[j]) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
 					stbsp_sprintf(buf, u8"%s 开始运动", ICON_FA_LONG_ARROW_ALT_UP);
@@ -2040,13 +1886,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_stop[i] = m_motor_params[i].set_stop;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_stop;
 
 						char szVar_clear[] = { "main.SetClear" };
@@ -2056,14 +1897,20 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_clear[i] = m_motor_params[i].set_clear;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-						if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_clear;
+
+						char szVar[] = { "main.m_Move_Pos" };
+						m_motor_params[j].Tarposition = m_motor_params[j].Tarposition;
+						double* myArray_position = new double[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_position[i] = m_motor_params[i].Tarposition;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar, myArray_position, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_position;
 
 						if (m_motor_params[j].Tarvelocity > m_motor_params[j].velocity_min)
 						{
@@ -2076,19 +1923,50 @@ void UITrolleyControlTest::Draw()
 							{
 								myArray[i] = m_motor_params[i].motion_exc;
 							}
-							long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-							if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-							{
-								// 注意：不能直接sizeof(myArray)，大小不对！！！
-								nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-								if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-							}
+							long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+							if (nErr) UI_ERROR("AdsError: %ld", nErr);
 							delete[] myArray;
 						}
 						else
 						{
 							UI_ERROR("Error: Velocity is too small: %lf", m_motor_params[j].Tarvelocity);
 						}
+					}
+					ImGui::PopStyleColor(4);
+
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+					stbsp_sprintf(buf, u8"%s 停止运动", ICON_FA_SHARE);
+					if (ImGui::Button(buf))
+					{
+						PressDown[j] = false;
+
+						unsigned long lHdlVar;   	//创建句柄-使能
+						unsigned long pcbReturn;
+						char szVar[] = { "main.m_Motion_Exc" };
+						m_motor_params[j].motion_exc = false;
+						bool* myArray = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray[i] = m_motor_params[i].motion_exc;
+						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray;
+
+						char szVar_stop[] = { "main.SetStop" };
+						m_motor_params[j].set_stop = true;
+						bool* myArray_stop = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_stop[i] = m_motor_params[i].set_stop;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_stop;
 					}
 					ImGui::PopStyleColor(4);
 					break;
@@ -2107,13 +1985,8 @@ void UITrolleyControlTest::Draw()
 							{
 								myArray[i] = m_motor_params[i].Tarvelocity;
 							}
-							long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-							if (nErr) UI_ERROR("18Error: AdsSyncReadWriteReq: %ld", nErr);
-							{
-								// 注意：不能直接sizeof(myArray)，大小不对！！！
-								nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-								if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-							}
+							long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+							if (nErr) UI_ERROR("AdsError: %ld", nErr);
 							delete[] myArray;
 						}
 						else
@@ -2140,12 +2013,13 @@ void UITrolleyControlTest::Draw()
 
 					ImGui::SameLine();
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_Button,((bool)PressDown[j])? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f): (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
 					stbsp_sprintf(buf, u8"%s 开始运动", ICON_FA_RUNNING);
 					if (ImGui::Button(buf))
 					{
+						PressDown[j] = true;
 						unsigned long lHdlVar;   	//创建句柄-使能
 						unsigned long pcbReturn;
 						char szVar_stop[] = { "main.SetStop" };
@@ -2155,13 +2029,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_stop[i] = m_motor_params[i].set_stop;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_stop;
 
 						char szVar_clear[] = { "main.SetClear" };
@@ -2171,13 +2040,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_clear[i] = m_motor_params[i].set_clear;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_clear), szVar_clear, &pcbReturn);
-						if (nErr) UI_ERROR("11Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_clear[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_clear;
 
 						Con_con_flag[j] = 1;
@@ -2189,13 +2053,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].motion_exc;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 					ImGui::PopStyleColor(4);
@@ -2208,6 +2067,7 @@ void UITrolleyControlTest::Draw()
 					stbsp_sprintf(buf, u8"%s 停止运动", ICON_FA_SHARE);
 					if (ImGui::Button(buf))
 					{
+						PressDown[j] = false;
 						Con_con_flag[j] = 0;
 
 						unsigned long lHdlVar;   	//创建句柄-使能
@@ -2219,13 +2079,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].motion_exc;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 
 						char szVar_stop[] = { "main.SetStop" };
@@ -2235,13 +2090,8 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray_stop[i] = m_motor_params[i].set_stop;
 						}
-						nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar_stop), szVar_stop, &pcbReturn);
-						if (nErr) UI_ERROR("17Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(bool) * m_trolley_num, &myArray_stop[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncReadReq: %ld", nErr); }
-						}
+						nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray_stop;
 					}
 
@@ -2255,17 +2105,20 @@ void UITrolleyControlTest::Draw()
 						{
 							myArray[i] = m_motor_params[i].Tarposition;
 						}
-						long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, sizeof(szVar), szVar, &pcbReturn);
-						if (nErr) UI_ERROR("19Error: AdsSyncReadWriteReq: %ld", nErr);
-						{
-							// 注意：不能直接sizeof(myArray)，大小不对！！！
-							nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(double) * m_trolley_num, &myArray[0]); //这个写的是固定大小的数组哇
-							if (nErr) { UI_ERROR("Error: AdsSyncWriteReq: %ld", nErr); }
-						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
 					}
 
 					ImGui::PopStyleColor(4);
+					break;
+				case Trajectory_mode:
+					stbsp_sprintf(buf, u8"%s 读取轨迹文件", ICON_FA_ROCKET);
+					if (ImGui::Button(buf))
+					{
+					}
+
+					ImGui::SameLine();
 					break;
 				default:
 					break;

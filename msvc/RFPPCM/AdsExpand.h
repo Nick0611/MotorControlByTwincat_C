@@ -20,16 +20,6 @@ private:
 	PAmsAddr  m_pAddr = &m_Addr;//定义端口地址变量
 };
 
-AdsExpand::AdsExpand(PAmsAddr pAddr) :m_pAddr(pAddr)
-{
-	m_nPort = AdsPortOpenEx();		//打开ADS通讯端口
-}
-
-AdsExpand::~AdsExpand()
-{
-	AdsPortCloseEx(m_nPort);
-}
-
 template<typename T>
 inline long AdsExpand::WriteArray(char* szVar, T* array_data, int array_data_length)
 {
@@ -38,23 +28,14 @@ inline long AdsExpand::WriteArray(char* szVar, T* array_data, int array_data_len
 
 	// 复制传入的数组以避免修改原始数据
 	T* myArray = new T[array_data_length];
-	for (int i = 0; i < array_data_length; ++i)
-	{
-		myArray[i] = array_data[i];
-	}
+	for (int i = 0; i < array_data_length; ++i){myArray[i] = array_data[i];}
 
 	long nErr = AdsSyncReadWriteReqEx2(m_nPort, m_pAddr, ADSIGRP_SYM_HNDBYNAME, 0x0, sizeof(lHdlVar), &lHdlVar, strlen(szVar), (void*)szVar, &pcbReturn);
-	if (nErr) {
-		delete[] myArray;
-		return nErr;
-	}
+	if (nErr) {delete[] myArray; return nErr;}
 
 	// 写入数组数据
 	nErr = AdsSyncWriteReqEx(m_nPort, m_pAddr, ADSIGRP_SYM_VALBYHND, lHdlVar, sizeof(T) * array_data_length, &myArray[0]);
-	if (nErr) {
-		delete[] myArray;
-		return nErr;
-	}
+	if (nErr) {delete[] myArray; return nErr;}
 
 	delete[] myArray;
 	return 0;

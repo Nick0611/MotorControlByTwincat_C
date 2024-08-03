@@ -216,6 +216,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\share\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\EPos2Test\EPOS2.cpp" />
+    <ClCompile Include="AdsExpand.cpp" />
     <ClCompile Include="CPSHandler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RFPPCMController.cpp" />

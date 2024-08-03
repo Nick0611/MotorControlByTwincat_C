@@ -28,7 +28,8 @@ typedef enum
 	Jog_mode, // 点动
 	Velocity_mode, // 速度模式
 	Position_mode, // 位置模式
-	Continus_mode // 连续模式，实时跟踪目标位置
+	Continus_mode, // 连续模式，实时跟踪目标位置
+	Trajectory_mode	// 轨迹模式，读取外部csv轨迹，轨迹是关键点，进一步的插值在PLC的absolute运动中进行
 }Motor_Motion_Mode;
 
 // 电机参数设置
@@ -101,13 +102,16 @@ public:
 	void Thread_ReadActPos();
 	void Thread_ReadActVel();
 	void Thread_ReadActAcc();
+
+	void Thread_m_test();
 private:
-	const char* MotorModeNames[5] = {
+	const char* MotorModeNames[6] = {
 	"Free_mode",
 	"Jog_mode",
 	"Velocity_mode",
 	"Position_mode",
-	"Continus_mode"
+	"Continus_mode",
+	"Trajectory_mode"
 	}; // 为了下拉列表而构造的电机运行模式数组
 	int m_trolley_num_tmp = 16; // 被控电机数量（暂时）
 	int m_trolley_num = 16; // 被控电机数量（按下确认按钮后更新）
@@ -181,5 +185,17 @@ private:
 	bool Enable_this_module;
 
 	AdsExpand* m_AdsExpand = nullptr;
+
+	std::mutex m_thread_DoubleQueue_Write_lock;
+	std::thread thread_DoubleQueue_Write;
+	bool thread_DoubleQueue_Write_stop_flag = false;
+	int QueueBufferLen = 10;
+	double test_array_ads[10000] = { 0 };
+
+	int motorMotionModeCount = 6; // 因为有6个枚举值
+
+	bool PressDown_All;
+	std::vector<int> PressDown;	// 开始运动按钮是否按下过的标志
+
 };
 
