@@ -1,6 +1,17 @@
 {
   "ReadFrequency_hz":10,
-  "TargetSource": "Local",
+  "TargetSource": "CX-565096",
+ "CX-565096": {
+    "NetId": {
+      "b1": 5,
+      "b2": 86,
+      "b3": 80,
+      "b4": 150,
+      "b5": 1,
+      "b6": 1
+    }
+  },
+
   "CX-5212": {
     "NetId": {
       "b1": 5,

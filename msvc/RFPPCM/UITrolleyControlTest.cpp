@@ -107,31 +107,31 @@ void UITrolleyControlTest::Thread_ReadActAcc()
 	}
 }
 
-void UITrolleyControlTest::Thread_m_test()
+void UITrolleyControlTest::Thread_TrajectoryPositionToPlc(int axis_itx)
 {
-	short itx[3] = { 0 };
-	char szVar_acc[] = { "AdsQueue.ArrayQueueBuffer_Len" };
-	char szVar_queue[256] = { 0 };
-	sprintf(szVar_queue,"AdsQueue.TrajectoryPosition_FromAds[%d]", 1);
-	char szVar_itx[] = { "AdsQueue.itx" };
+	short itx = 0;
+	char szVar_acc[256] = { };
+	sprintf(szVar_acc, "AdsQueue.ArrayQueueBuffer_Len[%d]", axis_itx+1);
+	char szVar_queue[256] = { };
+	sprintf(szVar_queue,"AdsQueue.TrajectoryPosition_FromAds[%d]", axis_itx+1);
+	char szVar_itx[256] = { };
+	sprintf(szVar_itx, "AdsQueue.itx[%d]", axis_itx+1);
 	AdsExpand mmads(m_pAddr);
-	while (!thread_DoubleQueue_Write_stop_flag)
+	while (!(bool)thread_DoubleQueue_Write_stop_flag[axis_itx])
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
-		short* myArray = new short[m_trolley_num];
+		short* myArray = new short[1];
 		double* myArray_ads = new double[1];
-		long nErr = mmads.ReadArray(szVar_acc, myArray, m_trolley_num);
+		long nErr = mmads.ReadArray(szVar_acc, myArray, 1);
 		{
-			if (myArray[0] < QueueBufferLen && !nErr && itx[0]<10000)
+			if (myArray[0] < QueueBufferLen && !nErr && itx<10000)
 			{
-				std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
-				myArray_ads[0] = test_array_ads[itx[0]];
-				//myArray_ads[1] = 12;
-				//myArray_ads[2] = 13;
+				//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[axis_itx]);
+				myArray_ads[0] = test_array_ads[itx];
 				mmads.WriteArray(szVar_queue, myArray_ads, 1);
-				itx[0]++;
-				mmads.WriteArray(szVar_itx, itx, m_trolley_num);
-				UI_ERROR("%d, %d, %lf", myArray[0], itx[0], myArray_ads[0]);
+				itx++;
+				mmads.WriteArray(szVar_itx, &itx, 1);
+				UI_ERROR("%d, %d, %lf", myArray[0], itx, myArray_ads[0]);
 			}
 
 		}
@@ -139,7 +139,7 @@ void UITrolleyControlTest::Thread_m_test()
 		delete[] myArray_ads;
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-		int sleepTime = int(1000 / 50) - static_cast<int>(elapsedTime);
+		int sleepTime = int(1000 / 200) - static_cast<int>(elapsedTime);
 		if (sleepTime > 0)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
@@ -372,6 +372,15 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	Con_con_flag.resize(m_trolley_num, 0);
 	PressDown.resize(m_trolley_num, 0);
 
+	//m_thread_DoubleQueue_Write_lock.resize(m_trolley_num);
+	thread_DoubleQueue_Write.resize(m_trolley_num);
+	thread_DoubleQueue_Write_stop_flag.resize(m_trolley_num);
+	//for (size_t i = 0; i < m_trolley_num; ++i) {
+	//	m_thread_DoubleQueue_Write_lock.push_back(new std::mutex());
+	//}
+
+	m_TrajectoryDataAll.resize(m_trolley_num);
+
 	m_record_flag_continuous = false;
 	m_record_flag_jog = false;
 	m_record_jog_num = 0;
@@ -395,7 +404,7 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 
 	for (int i = 0; i < 10000; ++i)
 	{
-		test_array_ads[i] = i;
+		test_array_ads[i] = sin(i*0.01)*18000;
 	}
 }
 
@@ -423,12 +432,43 @@ UITrolleyControlTest::~UITrolleyControlTest()
 	if (thread_read_acc.joinable()) thread_read_acc.join();
 
 	{
-		std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
-		thread_DoubleQueue_Write_stop_flag = true;
+		//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[0]);
+		thread_DoubleQueue_Write_stop_flag[0] = 0;
 	}
-	if (thread_DoubleQueue_Write.joinable()) thread_DoubleQueue_Write.join();
+	if (thread_DoubleQueue_Write[0].joinable()) thread_DoubleQueue_Write[0].join();
 
 	AdsPortCloseEx(m_nPort);
+}
+
+int UITrolleyControlTest::LoadTrajectoryData(const char* filename,int axis_index)
+{
+	std::ifstream infile(filename, std::ifstream::in);
+	if (!infile.is_open())
+	{
+		LOG_ERROR("Load data failed, file %s does not exists!\n", filename);
+		return 0;
+	}
+	int count = 0;
+	while (!infile.eof())
+	{
+		std::string s;
+		std::getline(infile, s);
+		if (s.empty())
+		{
+			continue;
+		}
+		double tmp;
+
+		std::istringstream iss(s);
+		iss >> tmp;
+
+		m_TrajectoryDataAll[axis_index].data.push_back(tmp);
+		m_TrajectoryDataAll[axis_index].AxisIndex = axis_index;
+		count++;
+	}
+	infile.close();
+
+	return count;
 }
 
 void UITrolleyControlTest::Draw()
@@ -447,12 +487,12 @@ void UITrolleyControlTest::Draw()
 	if (ImGui::Button(sss))
 	{
 		{
-			std::lock_guard<std::mutex> lock(m_thread_DoubleQueue_Write_lock);
-			thread_DoubleQueue_Write_stop_flag = false;
+			//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[0]);
+			thread_DoubleQueue_Write_stop_flag[0] = 0;
 		}
-		if (!thread_DoubleQueue_Write.joinable())
+		if (!thread_DoubleQueue_Write[0].joinable())
 		{
-			thread_DoubleQueue_Write = std::thread(&UITrolleyControlTest::Thread_m_test, this);
+			thread_DoubleQueue_Write[0] = std::thread(&UITrolleyControlTest::Thread_TrajectoryPositionToPlc, this,0);
 		}
 	}
 
@@ -663,6 +703,13 @@ void UITrolleyControlTest::Draw()
 
 					Con_con_flag.resize(m_trolley_num, 0);
 					PressDown.resize(m_trolley_num, 0);
+
+					//m_thread_DoubleQueue_Write_lock.resize(m_trolley_num);
+					thread_DoubleQueue_Write.resize(m_trolley_num);
+					thread_DoubleQueue_Write_stop_flag.resize(m_trolley_num);
+
+					m_TrajectoryDataAll.resize(m_trolley_num);
+
 				}
 
 				ImGui::SameLine();
@@ -2119,6 +2166,86 @@ void UITrolleyControlTest::Draw()
 					}
 
 					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					ImGui::PushStyleColor(ImGuiCol_Button, ((bool)PressDown[j]) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
+					stbsp_sprintf(buf, u8"%s 开始运动", ICON_FA_RUNNING);
+					if (ImGui::Button(buf))
+					{
+						PressDown[j] = true;
+						unsigned long lHdlVar;   	//创建句柄-使能
+						unsigned long pcbReturn;
+						char szVar_stop[] = { "main.SetStop" };
+						m_motor_params[j].set_stop = false;
+						bool* myArray_stop = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_stop[i] = m_motor_params[i].set_stop;
+						}
+						long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_stop;
+
+						char szVar_clear[] = { "main.SetClear" };
+						m_motor_params[j].set_clear = true;
+						bool* myArray_clear = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_clear[i] = m_motor_params[i].set_clear;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_clear;
+
+						char szVar[] = { "main.m_Motion_Exc" };
+						m_motor_params[j].motion_exc = true;
+						bool* myArray = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray[i] = m_motor_params[i].motion_exc;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray;
+					}
+					ImGui::PopStyleColor(4);
+
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+					ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+					stbsp_sprintf(buf, u8"%s 停止运动", ICON_FA_SHARE);
+					if (ImGui::Button(buf))
+					{
+						PressDown[j] = false;
+
+						unsigned long lHdlVar;   	//创建句柄-使能
+						unsigned long pcbReturn;
+						char szVar[] = { "main.m_Motion_Exc" };
+						m_motor_params[j].motion_exc = false;
+						bool* myArray = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray[i] = m_motor_params[i].motion_exc;
+						}
+						long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray;
+
+						char szVar_stop[] = { "main.SetStop" };
+						m_motor_params[j].set_stop = true;
+						bool* myArray_stop = new bool[m_trolley_num];
+						for (int i = 0; i < m_trolley_num; ++i)
+						{
+							myArray_stop[i] = m_motor_params[i].set_stop;
+						}
+						nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+						if (nErr) UI_ERROR("AdsError: %ld", nErr);
+						delete[] myArray_stop;
+					}
+					ImGui::PopStyleColor(4);
 					break;
 				default:
 					break;

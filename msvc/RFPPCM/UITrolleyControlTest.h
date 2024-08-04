@@ -14,6 +14,7 @@
 //#include <map>
 #include <algorithm> // 包含算法库用于使用 std::max_element
 #include <fstream> // 写csv文件
+#include <sstream> // 包含 istringstream 等字符串流类
 #include "UserTool.h"
 #include <thread>
 #include <windows.h>
@@ -83,7 +84,11 @@ typedef struct
 	bool InTargetPosition; // 到达目标位置
 }Motor_Status;
 
-
+typedef struct
+{
+	int AxisIndex;
+	std::vector<double> data;
+}TrajectoryData;
 
 class UITrolleyControlTest : public UIBaseWindow
 {
@@ -103,7 +108,8 @@ public:
 	void Thread_ReadActVel();
 	void Thread_ReadActAcc();
 
-	void Thread_m_test();
+	void Thread_TrajectoryPositionToPlc(int axis_itx);
+	int LoadTrajectoryData(const char* filename, int axis_index);
 private:
 	const char* MotorModeNames[6] = {
 	"Free_mode",
@@ -186,11 +192,13 @@ private:
 
 	AdsExpand* m_AdsExpand = nullptr;
 
-	std::mutex m_thread_DoubleQueue_Write_lock;
-	std::thread thread_DoubleQueue_Write;
-	bool thread_DoubleQueue_Write_stop_flag = false;
-	int QueueBufferLen = 10;
+	//std::vector<std::mutex*> m_thread_DoubleQueue_Write_lock;
+	std::vector<std::thread> thread_DoubleQueue_Write;
+	std::vector<int> thread_DoubleQueue_Write_stop_flag;
+	int QueueBufferLen = 64;
 	double test_array_ads[10000] = { 0 };
+	TrajectoryData* m_TrajectoryData;
+	std::vector<TrajectoryData> m_TrajectoryDataAll;
 
 	int motorMotionModeCount = 6; // 因为有6个枚举值
 
