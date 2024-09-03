@@ -156,6 +156,9 @@
     <ClInclude Include="AdsExpand.h">
       <Filter>ADS</Filter>
     </ClInclude>
+    <ClInclude Include="TwincatMotorControl.h">
+      <Filter>ADS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RFPPCM.rc">
@@ -226,6 +229,9 @@
       <Filter>UI\IMWindows\Tool</Filter>
     </ClCompile>
     <ClCompile Include="AdsExpand.cpp">
+      <Filter>ADS</Filter>
+    </ClCompile>
+    <ClCompile Include="TwincatMotorControl.cpp">
       <Filter>ADS</Filter>
     </ClCompile>
   </ItemGroup>

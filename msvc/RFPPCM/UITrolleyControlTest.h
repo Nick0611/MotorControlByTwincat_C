@@ -84,11 +84,6 @@ typedef struct
 	bool InTargetPosition; // 到达目标位置
 }Motor_Status;
 
-typedef struct
-{
-	int AxisIndex;
-	std::vector<double> data;
-}TrajectoryData;
 
 class UITrolleyControlTest : public UIBaseWindow
 {
@@ -108,8 +103,7 @@ public:
 	void Thread_ReadActVel();
 	void Thread_ReadActAcc();
 
-	void Thread_TrajectoryPositionToPlc(int axis_itx);
-	int LoadTrajectoryData(const char* filename, int axis_index);
+	void Thread_TrajectoryPositionToPlc(int axis_itx, std::vector<double> data);
 private:
 	const char* MotorModeNames[6] = {
 	"Free_mode",
@@ -122,6 +116,7 @@ private:
 	int m_trolley_num_tmp = 16; // 被控电机数量（暂时）
 	int m_trolley_num = 16; // 被控电机数量（按下确认按钮后更新）
 	int m_trolley_num_max = 48; // 最大被控电机数量
+	int m_trolley_max_his = 16; // 最大被控电机数量历史最大值
 	//int m_ForceSensor_num_tmp = 4; // 力传感器数量（暂时）
 	//int m_ForceSensor_num = 4; // 力传感器数量（按下确认按钮后更新）
 	//int m_ForceSensor_num_max = 16; // 最大传感器数量
@@ -197,8 +192,11 @@ private:
 	std::vector<int> thread_DoubleQueue_Write_stop_flag;
 	int QueueBufferLen = 64;
 	double test_array_ads[10000] = { 0 };
-	TrajectoryData* m_TrajectoryData;
-	std::vector<TrajectoryData> m_TrajectoryDataAll;
+	std::vector<double> m_TrajectoryData;
+	std::vector<std::vector<double>> m_TrajectoryDataAll;
+	std::vector<char*> m_TrajectoryFileFullPath;
+	char buff_1[256]= { 0 };
+	char buff_2[256]= { 0 };
 
 	int motorMotionModeCount = 6; // 因为有6个枚举值
 

@@ -107,7 +107,7 @@ void UITrolleyControlTest::Thread_ReadActAcc()
 	}
 }
 
-void UITrolleyControlTest::Thread_TrajectoryPositionToPlc(int axis_itx)
+void UITrolleyControlTest::Thread_TrajectoryPositionToPlc(int axis_itx,std::vector<double> data)
 {
 	short itx = 0;
 	char szVar_acc[256] = { };
@@ -124,14 +124,14 @@ void UITrolleyControlTest::Thread_TrajectoryPositionToPlc(int axis_itx)
 		double* myArray_ads = new double[1];
 		long nErr = mmads.ReadArray(szVar_acc, myArray, 1);
 		{
-			if (myArray[0] < QueueBufferLen && !nErr && itx<10000)
+			if (myArray[0] < QueueBufferLen && !nErr && itx<data.size())
 			{
 				//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[axis_itx]);
-				myArray_ads[0] = test_array_ads[itx];
+				myArray_ads[0] = data[itx];
 				mmads.WriteArray(szVar_queue, myArray_ads, 1);
 				itx++;
 				mmads.WriteArray(szVar_itx, &itx, 1);
-				UI_ERROR("%d, %d, %lf", myArray[0], itx, myArray_ads[0]);
+				UI_WARN(u8"axis:%d，缓存位：%d, 第%d个数据点, 值：%lf", axis_itx + 1, myArray[0], itx, myArray_ads[0]);
 			}
 
 		}
@@ -143,6 +143,11 @@ void UITrolleyControlTest::Thread_TrajectoryPositionToPlc(int axis_itx)
 		if (sleepTime > 0)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+		}
+		if (itx== data.size())
+		{
+			thread_DoubleQueue_Write_stop_flag[axis_itx] = true;
+			UI_WARN(u8"轨迹发送线程%d已停止", axis_itx + 1);
 		}
 	} 
 }
@@ -379,7 +384,9 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	//	m_thread_DoubleQueue_Write_lock.push_back(new std::mutex());
 	//}
 
+	m_TrajectoryFileFullPath.resize(m_trolley_num);
 	m_TrajectoryDataAll.resize(m_trolley_num);
+	
 
 	m_record_flag_continuous = false;
 	m_record_flag_jog = false;
@@ -390,6 +397,8 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	{
 		m_motor_params[j].velocity_min = 0.01;
 		m_motor_params[j].Tarvelocity = m_motor_params[j].velocity_min;
+		m_TrajectoryFileFullPath[j] = new char[256]; // 分配足够的内存
+		std::strcpy(m_TrajectoryFileFullPath[j], "MotorTrajectory");
 	}
 
 	m_nPort = AdsPortOpenEx();		//打开ADS通讯端口
@@ -406,6 +415,8 @@ UITrolleyControlTest::UITrolleyControlTest(UIGLWindow* main_win, const char* tit
 	{
 		test_array_ads[i] = sin(i*0.01)*18000;
 	}
+
+	
 }
 
 UITrolleyControlTest::~UITrolleyControlTest()
@@ -431,45 +442,21 @@ UITrolleyControlTest::~UITrolleyControlTest()
 	if (thread_read_vel.joinable()) thread_read_vel.join();
 	if (thread_read_acc.joinable()) thread_read_acc.join();
 
-	{
-		//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[0]);
-		thread_DoubleQueue_Write_stop_flag[0] = 0;
-	}
 	if (thread_DoubleQueue_Write[0].joinable()) thread_DoubleQueue_Write[0].join();
 
 	AdsPortCloseEx(m_nPort);
-}
 
-int UITrolleyControlTest::LoadTrajectoryData(const char* filename,int axis_index)
-{
-	std::ifstream infile(filename, std::ifstream::in);
-	if (!infile.is_open())
+	for (int j = 0; j < m_trolley_max_his; ++j)
 	{
-		LOG_ERROR("Load data failed, file %s does not exists!\n", filename);
-		return 0;
-	}
-	int count = 0;
-	while (!infile.eof())
-	{
-		std::string s;
-		std::getline(infile, s);
-		if (s.empty())
-		{
-			continue;
+		if (m_TrajectoryFileFullPath[j] != nullptr) {
+			delete[] m_TrajectoryFileFullPath[j];
 		}
-		double tmp;
-
-		std::istringstream iss(s);
-		iss >> tmp;
-
-		m_TrajectoryDataAll[axis_index].data.push_back(tmp);
-		m_TrajectoryDataAll[axis_index].AxisIndex = axis_index;
-		count++;
+		thread_DoubleQueue_Write_stop_flag[j] = 1;
 	}
-	infile.close();
-
-	return count;
 }
+
+
+
 
 void UITrolleyControlTest::Draw()
 {
@@ -483,18 +470,18 @@ void UITrolleyControlTest::Draw()
 		return;
 	}
 
-	char sss[] = { "test" };
-	if (ImGui::Button(sss))
-	{
-		{
-			//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[0]);
-			thread_DoubleQueue_Write_stop_flag[0] = 0;
-		}
-		if (!thread_DoubleQueue_Write[0].joinable())
-		{
-			thread_DoubleQueue_Write[0] = std::thread(&UITrolleyControlTest::Thread_TrajectoryPositionToPlc, this,0);
-		}
-	}
+	//char sss[] = { "test" };
+	//if (ImGui::Button(sss))
+	//{
+	//	{
+	//		//std::lock_guard<std::mutex> lock(*m_thread_DoubleQueue_Write_lock[0]);
+	//		thread_DoubleQueue_Write_stop_flag[0] = 0;
+	//	}
+	//	if (!thread_DoubleQueue_Write[0].joinable())
+	//	{
+	//		thread_DoubleQueue_Write[0] = std::thread(&UITrolleyControlTest::Thread_TrajectoryPositionToPlc, this,0);
+	//	}
+	//}
 
 
 	// 0. 是否启动该模块，包括三个ADS读线程和一个全局ADS线程
@@ -683,6 +670,18 @@ void UITrolleyControlTest::Draw()
 				stbsp_sprintf(buf, u8"%s 确认更改电机数量", ICON_FA_MERCURY);
 				if (ImGui::Button(buf)) // 电机按钮确认数量，防止误滑动
 				{
+					if (m_trolley_max_his < m_trolley_num_tmp)
+					{
+						m_TrajectoryFileFullPath.resize(m_trolley_num_tmp);
+						for (int i = m_trolley_max_his; i < m_trolley_num_tmp; ++i)
+						{
+							m_TrajectoryFileFullPath[i] = new char[256]; // 分配足够的内存
+							std::strcpy(m_TrajectoryFileFullPath[i], "MotorTrajectory");
+						}
+						m_trolley_max_his = m_trolley_num_tmp;
+						m_TrajectoryDataAll.resize(m_trolley_num_tmp);
+					}
+					
 					m_trolley_num = m_trolley_num_tmp;
 					m_selected_flag.resize(m_trolley_num);
 					m_selected_motion_mode.resize(m_trolley_num);
@@ -708,7 +707,7 @@ void UITrolleyControlTest::Draw()
 					thread_DoubleQueue_Write.resize(m_trolley_num);
 					thread_DoubleQueue_Write_stop_flag.resize(m_trolley_num);
 
-					m_TrajectoryDataAll.resize(m_trolley_num);
+					
 
 				}
 
@@ -1448,6 +1447,110 @@ void UITrolleyControlTest::Draw()
 				}
 
 				break;
+			case Trajectory_mode:
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(120.0f / 360.0f, 0.8f, 0.8f));
+				stbsp_sprintf(buf, u8"%s 一键开始运动", ICON_FA_LONG_ARROW_ALT_UP);
+				if (ImGui::Button(buf))
+				{
+					// 开始运动按钮点击后，先clear掉可能存在的stop状态
+					unsigned long lHdlVar;   	//创建句柄-使能
+					unsigned long pcbReturn;
+					char szVar_stop[] = { "main.SetStop" };
+					bool* myArray_stop = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							PressDown[i] = 1;
+							m_motor_params[i].set_stop = false;
+						}
+						myArray_stop[i] = m_motor_params[i].set_stop;
+					}
+					long nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray_stop;
+
+					char szVar_clear[] = { "main.SetClear" };
+					bool* myArray_clear = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							m_motor_params[i].set_clear = true;
+						}
+						myArray_clear[i] = m_motor_params[i].set_clear;
+					}
+					nErr = m_AdsExpand->WriteArray(szVar_clear, myArray_clear, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray_clear;
+
+					char szVar[] = { "main.m_Motion_Exc" };
+					bool* myArray = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							m_motor_params[i].motion_exc = true;
+						}
+						myArray[i] = m_motor_params[i].motion_exc;
+					}
+					nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray;
+
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							if (!thread_DoubleQueue_Write[i].joinable())
+							{
+								thread_DoubleQueue_Write_stop_flag[i] = 0;
+								thread_DoubleQueue_Write[i] = std::thread(&UITrolleyControlTest::Thread_TrajectoryPositionToPlc, this, i, m_TrajectoryDataAll[i]);
+								thread_DoubleQueue_Write[i].detach();
+							}
+						}
+					}
+				}
+				ImGui::PopStyleColor(4);
+
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f / 360.0f, 0.5f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(10.0f / 360.0f, 0.7f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(20.0f / 360.0f, 0.8f, 0.8f));
+				stbsp_sprintf(buf, u8"%s 一键停止运动", ICON_FA_SHARE);
+				if (ImGui::Button(buf))
+				{
+					PressDown_All = false;
+					unsigned long lHdlVar;   	//创建句柄-使能
+					unsigned long pcbReturn;
+					char szVar[] = { "main.m_Motion_Exc" };
+					char szVar_stop[] = { "main.SetStop" };
+					bool* myArray = new bool[m_trolley_num];
+					bool* myArray_stop = new bool[m_trolley_num];
+					for (int i = 0; i < m_trolley_num; ++i)
+					{
+						if (m_selected_flag[i])
+						{
+							PressDown[i] = 0;
+							m_motor_params[i].motion_exc = false;
+							m_motor_params[i].set_stop = true;
+						}
+						myArray[i] = m_motor_params[i].motion_exc;
+						myArray_stop[i] = m_motor_params[i].set_stop;
+					}
+					long nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					nErr = m_AdsExpand->WriteArray(szVar_stop, myArray_stop, m_trolley_num);
+					if (nErr) UI_ERROR("AdsError: %ld", nErr);
+					delete[] myArray;
+					delete[] myArray_stop;
+				}
+				ImGui::PopStyleColor(4);
+				break;
 			default:
 				break;
 			}
@@ -2163,9 +2266,44 @@ void UITrolleyControlTest::Draw()
 					stbsp_sprintf(buf, u8"%s 读取轨迹文件", ICON_FA_ROCKET);
 					if (ImGui::Button(buf))
 					{
+						m_TrajectoryDataAll[j].clear();
+						m_TrajectoryDataAll[j].resize(0);
+						std::ifstream infile("data.csv", std::ifstream::in);
+						if (!infile.is_open())
+						{
+							LOG_ERROR("Load data failed, file %s does not exists!\n", m_TrajectoryFileFullPath[j]);
+						}
+						else
+						{
+							int count = 0;
+							while (!infile.eof())
+							{
+								std::string s;
+								std::getline(infile, s);
+								if (s.empty())
+								{
+									continue;
+								}
+								double tmp;
+								std::istringstream iss(s);
+								iss >> tmp;
+								m_TrajectoryDataAll[j].push_back(tmp);
+								count++;
+							}
+							infile.close();
+						}
 					}
 
 					ImGui::SameLine();
+					ImGui::PushItemWidth(0.7 * (ImGui::GetWindowWidth() - 200.0f));
+					if (ImGui::InputText(u8"轨迹文件路径", m_TrajectoryFileFullPath[j], 256))
+					{
+						//UI_ERROR(m_TrajectoryFileFullPath[j]);
+					}
+					ImGui::PopItemWidth();
+					
+
+					//ImGui::SameLine();
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 					ImGui::PushStyleColor(ImGuiCol_Button, ((bool)PressDown[j]) ? (ImVec4)ImColor::HSV(100.0f / 360.0f, 0.5f, 0.5f) : (ImVec4)ImColor::HSV(150.0f / 360.0f, 0.9f, 0.9f));
 					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(110.0f / 360.0f, 0.7f, 0.7f));
@@ -2208,6 +2346,13 @@ void UITrolleyControlTest::Draw()
 						nErr = m_AdsExpand->WriteArray(szVar, myArray, m_trolley_num);
 						if (nErr) UI_ERROR("AdsError: %ld", nErr);
 						delete[] myArray;
+
+						if (!thread_DoubleQueue_Write[j].joinable())
+						{
+							thread_DoubleQueue_Write_stop_flag[j] = 0;
+							thread_DoubleQueue_Write[j] = std::thread(&UITrolleyControlTest::Thread_TrajectoryPositionToPlc, this, j, m_TrajectoryDataAll[j]);
+							thread_DoubleQueue_Write[j].detach();
+						}
 					}
 					ImGui::PopStyleColor(4);
 

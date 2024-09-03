@@ -186,6 +186,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="RFPPCMController.h" />
     <ClInclude Include="Title.h" />
+    <ClInclude Include="TwincatMotorControl.h" />
     <ClInclude Include="UIForceSensor_HUATRAN.h" />
     <ClInclude Include="UITrolleyControlTest.h" />
     <ClInclude Include="UIApplication.h" />
@@ -220,6 +221,7 @@
     <ClCompile Include="CPSHandler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RFPPCMController.cpp" />
+    <ClCompile Include="TwincatMotorControl.cpp" />
     <ClCompile Include="UIForceSensor_HUATRAN.cpp" />
     <ClCompile Include="UITrolleyControlTest.cpp" />
     <ClCompile Include="UIApplication.cpp" />
