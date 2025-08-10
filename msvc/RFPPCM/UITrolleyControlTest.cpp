@@ -2268,7 +2268,7 @@ void UITrolleyControlTest::Draw()
 					{
 						m_TrajectoryDataAll[j].clear();
 						m_TrajectoryDataAll[j].resize(0);
-						std::ifstream infile("data.csv", std::ifstream::in);
+						std::ifstream infile(m_TrajectoryFileFullPath[j], std::ifstream::in);
 						if (!infile.is_open())
 						{
 							LOG_ERROR("Load data failed, file %s does not exists!\n", m_TrajectoryFileFullPath[j]);
